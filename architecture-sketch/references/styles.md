@@ -76,4 +76,76 @@ custom shape.
   on the *far side* of the lollipop tip from the provider — i.e.
   continuing outward along the same line, not between the provider and
   its own tip. With a lollipop tip at `(Px, Py - 30)` (stub pointing up),
-  the socket's
+  the socket's target point is `(Px, Py - 30 - 2)` = 2px *further* in
+  the same outward direction — keep this gap minimal (~2px), just enough
+  that the circle and half-circle read as two distinct marks rather than
+  one touching shape. That gap is the only thing drawn between them: the
+  socket's line never overlaps the lollipop's own stub. Route the rest of
+  the socket edge with waypoints (per the edge-crossing rules above) so
+  its *last* segment approaches straight along this same axis into the
+  gap point.
+- If several services consume the same API, give each its own socket edge
+  aimed at the same lollipop tip (from whatever clear angle each consumer
+  can reach it from), all stopping 14px short with their own gap.
+
+See `assets/template.drawio` for a fully worked, verified-clear example
+(a provider and a consumer with the lollipop/socket pair, plus the
+waypoint routing that gets the socket there cleanly).
+
+## System boundaries
+
+Draw every logical system/bounded-context as a plain dashed rectangle placed
+**behind** its members (put its `mxCell` earlier in the XML than the
+components inside it, so z-order puts it in back). Do NOT use draw.io
+"container" mode (`container=1`) — it forces child coordinates to become
+relative to the parent and is easy to get wrong. Plain absolute coordinates
+for everything, with the boundary just drawn underneath, is far more robust.
+
+```
+style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;verticalAlign=top;align=left;fontStyle=1;spacingLeft=8;spacingTop=6;fontSize=13;sketch=1;jiggle=2;"
+```
+
+Size the rectangle to comfortably enclose its children with ~30-40px margin
+on every side. Label it with the system/bounded-context name (e.g. "Order
+System", "Billing Context").
+
+## Edges (calls between components)
+
+Default style for synchronous calls (REST/gRPC):
+```
+edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;sketch=1;jiggle=2;
+```
+Label with the REST-style method + path only, no request/response body
+details, e.g.:
+- `GET /orders/{id}`
+- `POST /payments`
+- `PUT /orders/{id}/status`
+
+For asynchronous / event-driven edges (publish or consume to/from a Kafka
+topic), use a dashed open-arrow edge so sync vs async is visually distinct:
+```
+edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;dashed=1;fontSize=11;sketch=1;jiggle=2;
+```
+Label these with just the topic/event name, not payload schema, e.g.
+`publishes: order.created` or `consumes: order.created`.
+
+Keep every edge label short (one line). If a relationship needs more
+explanation than fits on one line, it's too detailed for a sketch — leave it
+out.
+
+## Layout conventions
+
+- Grid step ~20-40px; snap x/y to multiples of 20.
+- Left-to-right or top-to-bottom flow matching request direction (client on
+  the left/top).
+- Leave 40-60px gaps between sibling components so edges don't overlap boxes.
+- Don't cram more than ~15-20 components into a single sketch — split into
+  multiple diagrams (e.g. by bounded context) if the system is bigger than
+  that. A sketch that needs scrolling to read has failed its job.
+- Font size 12 for component labels, 11 for edge labels; nothing smaller.
+
+## ID conventions
+
+Give every `mxCell` a short, readable, unique id (`gw1`, `svcOrder`,
+`dbOrders`, `topicOrderEvents`, `sysOrder`, `e1`, `e2`, ...) rather than
+random hashes — makes the XML diffable and easy to hand-edit later.
