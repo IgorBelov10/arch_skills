@@ -119,8 +119,13 @@
           </mxGeometry>
         </mxCell>
 
+        <!-- API method label lives next to the lollipop tip, not on the socket edge -->
+        <mxCell id="apiInventoryLabel" value="GET /inventory" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#333333;sketch=1;" vertex="1" parent="1">
+          <mxGeometry x="265" y="655" width="150" height="20" as="geometry" />
+        </mxCell>
+
         <!-- Socket: Reporting Service consumes it (halfCircle, stops 14px short of the lollipop tip) -->
-        <mxCell id="apiInventorySocket" value="GET /inventory" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=halfCircle;endFill=0;endSize=10;startArrow=none;strokeColor=#333333;sketch=1;jiggle=1;fontSize=11;" edge="1" parent="1" source="svcReporting">
+        <mxCell id="apiInventorySocket" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=halfCircle;endFill=0;endSize=10;startArrow=none;strokeColor=#333333;sketch=1;jiggle=1;fontSize=11;" edge="1" parent="1" source="svcReporting">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="530" y="640" />

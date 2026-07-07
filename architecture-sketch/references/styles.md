@@ -67,10 +67,22 @@ custom shape.
   etc. Treat this tip point like any other obstacle-check target when
   planning the stub's own short path (it's usually short enough that this
   is trivial).
+- **Label the method(s) next to the lollipop itself, not on the socket
+  edge.** Add a separate plain-text vertex
+  (`style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#333333;sketch=1;"`)
+  positioned just beside the tip (e.g. offset ~15px to the side, sized
+  ~150x20), with the method(s) as its value — `GET /inventory`, or several
+  lines if the same interface exposes more than one method. This is the
+  one place that documents what the interface offers; it stays put
+  regardless of how many consumers connect sockets to it. Check it against
+  the overlap checker like any other component.
 
 **Socket (consumer) — one edge per service that calls that REST API:**
 - An edge with `source` = the consuming service's id and, again, **no
-  `target` cell** — a floating `<mxPoint as="targetPoint">`.
+  `target` cell** — a floating `<mxPoint as="targetPoint">`. **Leave it
+  unlabeled** (no `value`) — the method lives on the lollipop's text block,
+  not here, so multiple consumers of the same interface don't repeat or
+  (worse) drift out of sync with each other.
 - Style: `edgeStyle=orthogonalEdgeStyle;html=1;endArrow=halfCircle;endFill=0;endSize=10;startArrow=none;strokeColor=#333333;sketch=1;jiggle=1;`
 - **Critical geometry rule — the gap:** the socket's target point must sit
   on the *far side* of the lollipop tip from the provider — i.e.
@@ -86,7 +98,7 @@ custom shape.
   gap point.
 - If several services consume the same API, give each its own socket edge
   aimed at the same lollipop tip (from whatever clear angle each consumer
-  can reach it from), all stopping 14px short with their own gap.
+  can reach it from), all stopping ~2px short with their own gap.
 
 See `assets/template.drawio` for a fully worked, verified-clear example
 (a provider and a consumer with the lollipop/socket pair, plus the
