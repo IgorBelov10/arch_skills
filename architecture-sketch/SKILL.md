@@ -13,26 +13,81 @@ not database schemas, method bodies, or config.
 
 ## Workflow
 
-1. **Understand the scope.** Figure out from the conversation (or a single
-   clarifying question if genuinely unclear) which components exist and how
-   they relate: microservices, databases, load balancers/gateways, Kafka
-   topics or other queues, caches, external/3rd-party systems, and clients.
+1. **Understand the scope — skip the interview if this is already answered.**
    If the user already described their system in this conversation or in a
-   file, use that — don't re-ask for things you already know.
+   file (services, DBs, how they connect), use that directly and skip to
+   step 5. Otherwise run the interview below.
 
-2. **Read `references/styles.md`** before drawing anything. It defines the
+2. **Interview, part A — scope & categories (buttons).** One
+   `ask_user_input_v0` call, up to 3 questions:
+   - Scope: "high-level overview" / "one bounded context in detail" / "the
+     whole system as-is"
+   - Component categories present (multi-select): microservices / databases
+     / queues or Kafka topics / external 3rd-party systems / cache / API
+     gateway or load balancer
+   - Whether to use the provided/consumed REST API notation (lollipop &
+     socket): yes / no / decide as we go
+
+3. **Interview, part B — names only (plain text question).** Ask **only**
+   for the names of components, grouped **only** by the categories the
+   user selected in part A — don't ask about a category they didn't pick,
+   and don't ask about functionality yet. Example, if they picked
+   microservices + databases + Kafka + gateway:
+   > Перечисли имена: микросервисов, баз данных, Kafka-топиков,
+   > gateway/LB (если их несколько).
+   This is a free-text question, not `ask_user_input_v0` — names and counts
+   are too open-ended for buttons.
+
+4. **Interview, part C — per-component profile, iterative.** For each
+   component named in part B, in turn:
+   1. Draft a profile using the template for its category (below), inferring
+      what you reasonably can from the component's name and its stated
+      relationships to others named so far — don't leave every field as a
+      guess-free blank if the name makes something obvious (e.g. a service
+      named "Order Service" plausibly owns an "orders" DB).
+   2. Show the draft to the user.
+   3. Let them correct or add to it; redraft; show again.
+   4. Repeat until the user confirms (e.g. "ОК") — only then move to the
+      next component.
+   Don't batch all components into one giant question — go one at a time,
+   so corrections stay easy to track. Once every component is confirmed,
+   proceed to building the diagram (step 6 on).
+
+   **Profile templates per category:**
+
+   - **Microservice:** responsibility (one phrase — what business function
+     it owns); type — core/business logic vs. utility/infra (decides
+     hachure fill); REST APIs it exposes (`METHOD /path` list, → becomes a
+     lollipop); REST APIs of other services it calls (which service, which
+     endpoint); Kafka: what it publishes / what it consumes; which DB it
+     uses; which external 3rd-party systems it calls.
+   - **Database:** which service owns it (normally 1:1). Engine/type is
+     optional — only ask if the user cares, it doesn't need to appear on
+     the sketch.
+   - **Kafka topic:** event/topic name; which service(s) publish; which
+     service(s) consume.
+   - **API gateway / load balancer:** which services sit behind it
+     (routing).
+   - **External / 3rd-party system:** which service(s) call it and why, in
+     one short phrase.
+   - **Cache:** which service uses it.
+   - **Client / actor:** which gateway or service it enters the system
+     through.
+
+5. **Read `references/styles.md`** before drawing anything. It defines the
    exact shape/color/style string to use for each component type, how to
    draw system boundaries, edge label conventions (REST-style
    `METHOD /path` for sync calls, `publishes:`/`consumes: topic.name` for
    Kafka), and the REST API provided/consumed notation (lollipop & socket —
    see below). Reuse these exactly — don't invent new colors/shapes ad hoc.
 
-3. **Build the XML directly** (don't just copy the template's example
-   content — replace it with the user's actual system). `assets/template.drawio`
+6. **Build the XML directly** (don't just copy the template's example
+   content — replace it with the user's actual system, informed by the
+   confirmed profiles from step 4). `assets/template.drawio`
    is a working example you can view for structural reference: system
    boundary rectangle, microservices, DBs, an API gateway, a Kafka topic,
    an external system, sync REST edges, and async pub/sub edges.
-   `scripts/check_overlap.py` is the layout validator used in step 5.
+   `scripts/check_overlap.py` is the layout validator used in step 8.
 
    Key structural rules:
    - Root is `<mxfile><diagram><mxGraphModel><root>`, with `mxCell id="0"`
@@ -47,7 +102,7 @@ not database schemas, method bodies, or config.
    - Edges reference `source`/`target` by those ids and need
      `<mxGeometry relative="1" as="geometry" />`.
 
-4. **Keep it a sketch, not a spec.** Per component: name only, no internal
+7. **Keep it a sketch, not a spec.** Per component: name only, no internal
    detail. Per edge: one-line label only (`GET /orders/{id}`,
    `publishes: order.created`) — never full request/response schemas,
    headers, or payload fields. If the user asks for that level of detail,
@@ -62,7 +117,7 @@ not database schemas, method bodies, or config.
    distinction and both `endArrow=circle` and `endArrow=halfCircle` are
    real draw.io arrow types, not a workaround.
 
-5. **Validate before delivering — two checks, both mandatory:**
+8. **Validate before delivering — two checks, both mandatory:**
    - **Well-formed XML:**
      `python3 -c "import xml.etree.ElementTree as ET; ET.parse('file.drawio')"`
      (also confirms there are no duplicate `id` values by construction).
@@ -83,6 +138,10 @@ not database schemas, method bodies, or config.
      file.
 
    A `.drawio` file that fails either check is worse than no file.
+
+9. **Save to `/mnt/user-data/outputs/<name>.drawio`** and use `present_files`.
+   Tell the user briefly what's in it (systems/components shown), not a
+   long report — the diagram speaks for itself once opened in draw.io.
 
 ## Avoiding overlaps and edge crossings in the first place (do this while laying out, not just after)
 
@@ -130,10 +189,6 @@ not database schemas, method bodies, or config.
   recompute that component's position from its neighbors' actual bounding
   boxes so the fix is robust, not a near-miss that breaks again on the next
   edit.
-
-6. **Save to `/mnt/user-data/outputs/<name>.drawio`** and use `present_files`.
-   Tell the user briefly what's in it (systems/components shown), not a
-   long report — the diagram speaks for itself once opened in draw.io.
 
 ## When the system is large
 
