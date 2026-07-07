@@ -84,4 +84,73 @@ not database schemas, method bodies, or config.
 
    A `.drawio` file that fails either check is worse than no file.
 
-## Avoiding overlaps and edge crossings in the first place (do
+## Avoiding overlaps and edge crossings in the first place (do this while laying out, not just after)
+
+- Plan coordinates on a grid before writing XML: decide rows/columns of
+  components and leave **at least 40-60px of empty space** between the
+  bounding boxes of *any* two sibling components — not just the ones
+  expected to be near each other. Gateways, boundaries, and external systems
+  routinely get forgotten and end up overlapping neighbors.
+- System boundary rectangles must be sized to enclose only their own
+  children (with ~30-40px margin). A component that is *not* part of that
+  system must stay clearly outside the boundary's box, with a visible gap —
+  not flush against or clipping its edge. A box that merely touches or
+  overlaps a boundary it doesn't belong to is exactly the bug the overlap
+  checker exists to catch.
+- **Arrange fan-out as a hub-and-spoke, not a row a line has to reach past.**
+  If one component (e.g. a gateway) calls several others, put those targets
+  in a row directly on the far side of the hub, centered on it, rather than
+  scattered so that the path to a farther target grazes a nearer one. A
+  straight (or right-angled) line from the hub to each target should never
+  need to skim past a target that isn't the one it's headed to.
+- Keep call chains in clean vertical/horizontal lanes where possible (e.g. a
+  service directly above its own database) rather than diagonal paths
+  crossing other lanes — diagonals are what usually clip a neighboring box.
+- **Any edge whose source and target don't share the same x or y needs
+  explicit waypoints — this is not optional, and the checker alone is not
+  enough.** draw.io's real auto-router does not draw a straight line
+  between two floating components; it typically exits the source
+  horizontally at the source's own y-level toward the target, then turns.
+  That means a "diagonal" edge routinely clips a sibling component that
+  happens to sit at the source's height, even when a straight-line
+  approximation between the two centers looks perfectly clear. Concretely:
+  for every edge where `source.x ≠ target.x` and `source.y ≠ target.y`,
+  add an explicit `<Array as="points">` with 1-2 `<mxPoint>` waypoints that
+  route it through a verified-clear gap (e.g. down through the empty space
+  between two neighboring components, then across, then down/up into the
+  target) — don't leave it to auto-routing. The layout checker walks these
+  waypoints when present; without them it can only fall back to a
+  straight-line approximation, which is known to under-report this exact
+  failure mode.
+- When components are arranged in a grid (e.g. several microservices each
+  with their own DB below them), compute each column's x from the previous
+  column's `x + width + gap` rather than eyeballing round numbers —
+  eyeballed coordinates are the most common source of overlap.
+- If the checker reports a problem, don't just nudge by a few pixels —
+  recompute that component's position from its neighbors' actual bounding
+  boxes so the fix is robust, not a near-miss that breaks again on the next
+  edit.
+
+6. **Save to `/mnt/user-data/outputs/<name>.drawio`** and use `present_files`.
+   Tell the user briefly what's in it (systems/components shown), not a
+   long report — the diagram speaks for itself once opened in draw.io.
+
+## When the system is large
+
+If asked to sketch something with many services (roughly >15-20 boxes),
+don't cram it into one unreadable diagram. Either:
+- Split into multiple `.drawio` files (e.g. one per bounded context, plus one
+  high-level overview showing just the system boundaries and their
+  connections), or
+- Ask the user which context/subset they want first.
+
+## Iterating on an existing sketch
+
+If the user wants to modify a previously generated diagram (add a service,
+rename an edge, etc.), read the existing `.drawio` file back, make a
+targeted edit (add/modify the relevant `mxCell` elements, keep everything
+else untouched), re-run **both** validators (XML well-formedness and
+`scripts/check_overlap.py`), and re-save — don't regenerate the whole
+diagram from scratch unless asked to. Adding a component near existing ones
+is a common way to introduce a fresh overlap, so don't skip the check just
+because it's a small edit.
