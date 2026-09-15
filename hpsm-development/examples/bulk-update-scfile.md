@@ -20,8 +20,7 @@ function bulkUpdateDeviceSystemTime(queryString, timeFieldName) {
     var rc = deviceFile.doSelect(queryString);
 
     if (rc != RC_SUCCESS) {
-        lib.logmessage("WARN", "bulkUpdateDeviceSystemTime",
-            "No records found or query failed. RC=" + rc + ", query=" + queryString);
+        print("WARN: bulkUpdateDeviceSystemTime: No records found or query failed. RC=" + rc + ", query=" + queryString);
         return stats;
     }
 
@@ -47,8 +46,7 @@ function bulkUpdateDeviceSystemTime(queryString, timeFieldName) {
         rc = deviceFile.getNext();
     }
 
-    lib.logmessage("INFO", "bulkUpdateDeviceSystemTime",
-        "Total=" + stats.total + ", Updated=" + stats.updated + ", Failed=" + stats.failed);
+    print("INFO: bulkUpdateDeviceSystemTime: Total=" + stats.total + ", Updated=" + stats.updated + ", Failed=" + stats.failed);
 
     return stats;
 }
