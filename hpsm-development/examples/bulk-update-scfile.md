@@ -24,7 +24,7 @@ function bulkUpdateDeviceSystemTime(queryString, timeFieldName) {
         return stats;
     }
 
-    var now = new Date(); // см. references/js-api.md — проверить формат для конкретного поля
+    var now = new XMLDate(new Date()).getDatum(); // подтверждённый способ, см. references/dates.md
 
     while (rc == RC_SUCCESS) {
         stats.total++;
